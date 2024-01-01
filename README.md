@@ -10,7 +10,8 @@ Create `.env` file and change values
 ```shell
 echo "API_ID=1234567
 API_HASH=1234567890abcdefghijklmnopqrstuv
-PHONE=+8123456789" > parse-server/.env
+PHONE=+8123456789
+PASSWORD=123qwerty" > parse-server/.env
 ```
 
 ## TODO

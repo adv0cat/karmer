@@ -13,7 +13,7 @@ API_HASH = os.getenv('API_HASH')
 MAX_DELTA = timedelta(hours=3, minutes=30)
 
 client = TelegramClient(session='karmer', api_id=API_ID, api_hash=API_HASH)
-client.start(phone=lambda: os.getenv('PHONE'))
+client.start(phone=lambda: os.getenv('PHONE'), password=lambda: os.getenv('PASSWORD'))
 
 
 async def parse_channels(app: TelegramClient) -> list[PeerChannel]:
