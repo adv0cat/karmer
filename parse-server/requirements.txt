@@ -1,0 +1,3 @@
+python-dotenv==1.0.0
+TgCrypto==1.2.5
+Telethon==1.33.1
