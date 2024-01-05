@@ -21,6 +21,12 @@ POSTGRES_PORT=5432
 POSTGRES_DB=mydb
 POSTGRES_USER=my-user
 POSTGRES_PASSWORD=my-password
+
+# MAX_OFFSET (optional)
+OFFSET_WEEKS=0
+OFFSET_DAYS=0
+OFFSET_HOURS=24
+OFFSET_MINUTES=0
 " > parse-server/.env
 ```
 
@@ -29,7 +35,7 @@ POSTGRES_PASSWORD=my-password
 - [x] Retrieve **reactions** from a Telegram chat
 - [x] Research _"how"_ and _"in what form"_ reactions can be retrieved
 - [x] Set up a Docker **DB** image for collecting reactions
-- [ ] Implement this **MVP** into a server
+- [x] Implement this **MVP** into a server
 - [ ] Create a **Docker image** from the server
 - [ ] Wrap everything in **Docker Compose** for backend and DB integration
 - [ ] Develop a backend that provides **analytics on reactions**
