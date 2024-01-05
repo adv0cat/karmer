@@ -8,19 +8,29 @@
 Create `.env` file and change values
 
 ```shell
-echo "API_ID=1234567
+echo "# Telegram MTProto
+API_ID=1234567
 API_HASH=1234567890abcdefghijklmnopqrstuv
 PHONE=+8123456789
-PASSWORD=123qwerty" > parse-server/.env
+# optional
+PASSWORD=123qwerty
+
+# Postgres
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=mydb
+POSTGRES_USER=my-user
+POSTGRES_PASSWORD=my-password
+" > parse-server/.env
 ```
 
 ## TODO
 - [x] Connect the **Telethon** library in Python
 - [x] Retrieve **reactions** from a Telegram chat
 - [x] Research _"how"_ and _"in what form"_ reactions can be retrieved
+- [x] Set up a Docker **DB** image for collecting reactions
 - [ ] Implement this **MVP** into a server
 - [ ] Create a **Docker image** from the server
-- [ ] Set up a Docker **DB** image for collecting reactions
 - [ ] Wrap everything in **Docker Compose** for backend and DB integration
 - [ ] Develop a backend that provides **analytics on reactions**
 - [ ] Integrate the analytics backend with **Telegram**
