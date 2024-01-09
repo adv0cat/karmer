@@ -1,16 +1,35 @@
+import asyncio
+import asyncpg
 import os
 
 from typing import Coroutine, Any
+from parse import parse_telegram
 from telethon import TelegramClient
 
+PARSE_TELEGRAM_INTERVAL = 10
 
-def init_telegram_client() -> Coroutine[Any, Any, TelegramClient]:
+
+async def init_telegram_client(code_queue: asyncio.Queue, postgres: asyncpg.Connection):
     print('init telegram client')
+    telegram_client = await get_telegram_client(code_queue)
+    await run_telegram_loop(telegram_client, postgres)
+
+
+def get_telegram_client(code_queue: asyncio.Queue) -> Coroutine[Any, Any, TelegramClient]:
+    print('get telegram client')
     api_id = int(os.environ.get('API_ID') or 0)
     api_hash = os.environ.get('API_HASH')
 
-    telegram_client = TelegramClient(session='karmer', api_id=api_id, api_hash=api_hash)
-    return telegram_client.start(phone=get_phone, password=get_password)  # type: ignore
+    telegram_client = TelegramClient(session='__session/karmer-docker', api_id=api_id, api_hash=api_hash)
+    return telegram_client.start(phone=get_phone, password=get_password, code_callback=code_queue.get)  # type: ignore
+
+
+async def run_telegram_loop(app: TelegramClient, postgres: asyncpg.Connection):
+    while True:
+        print('start telegram loop')
+        await parse_telegram(app, postgres)
+        print(f'{PARSE_TELEGRAM_INTERVAL}s waiting...')
+        await asyncio.sleep(PARSE_TELEGRAM_INTERVAL)
 
 
 def get_phone():

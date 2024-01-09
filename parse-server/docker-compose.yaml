@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  postgres-db-client:
+    image: postgres:alpine
+    container_name: postgres-db-client
+    ports:
+      - "5432:5432"
+    volumes:
+      - ${PWD}/__postgres:/var/lib/postgresql/data
+      - ${PWD}/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - postgres-network
+      - public-network # TODO: remove after test
+
+  parse-server:
+    build: .
+    container_name: parse-server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ${PWD}/__session:/code/__session
+    depends_on:
+      postgres-db-client:
+          condition: service_healthy
+    restart: always
+    networks:
+      - postgres-network
+      - public-network
+
+networks:
+  postgres-network:
+    driver: bridge
+    internal: true
+  public-network:
+    driver: bridge

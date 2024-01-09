@@ -36,7 +36,7 @@ OFFSET_MINUTES=0
 - [x] Research _"how"_ and _"in what form"_ reactions can be retrieved
 - [x] Set up a Docker **DB** image for collecting reactions
 - [x] Implement this **MVP** into a server
-- [ ] Create a **Docker image** from the server
-- [ ] Wrap everything in **Docker Compose** for backend and DB integration
+- [x] Create a **Docker image** from the server
+- [x] Wrap everything in **Docker Compose** for backend and DB integration
 - [ ] Develop a backend that provides **analytics on reactions**
 - [ ] Integrate the analytics backend with **Telegram**

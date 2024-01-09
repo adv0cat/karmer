@@ -1,6 +1,12 @@
-.PHONY: run-db-docker
+.PHONY: run-db-docker, server-up, server-down
 
 include .env
+
+server-up:
+	docker-compose up -d
+
+server-down:
+	docker-compose down -v --rmi local --remove-orphans
 
 run-db-docker:
 	docker run --name postgres-db-client --rm \
