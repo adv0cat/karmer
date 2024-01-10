@@ -1,12 +1,13 @@
 CREATE TABLE Reactions
 (
-    channel_id   INTEGER NOT NULL,
-    msg_id       INTEGER NOT NULL,
+    channel_id   INTEGER,
+    msg_id       INTEGER,
     from_user_id INTEGER,
-    to_user_id   INTEGER NOT NULL,
-    emoticon     TEXT    NOT NULL CHECK (CHAR_LENGTH(emoticon) <= 50),
+    to_user_id   INTEGER,
+    emoticon     TEXT CHECK (CHAR_LENGTH(emoticon) <= 50),
     count        INTEGER DEFAULT 1,
-    PRIMARY KEY (channel_id, msg_id, from_user_id, to_user_id, emoticon)
+    created_at   TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (channel_id, msg_id, from_user_id, emoticon)
 );
 
 CREATE TABLE ReactionCost

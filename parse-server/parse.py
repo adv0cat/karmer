@@ -43,7 +43,8 @@ async def parse_reactions(app: TelegramClient, peer_channel: PeerChannel):
                         from_user_id=reaction.peer_id.user_id,
                         to_user_id=to_user_id,
                         emoticon=get_emoticon(reaction.reaction),
-                        count=1
+                        count=1,
+                        date=reaction.date
                     ) for reaction in recent_reactions])
                 elif message.reactions.results is not None:
                     reactions_data.extend([Reaction(
@@ -52,7 +53,8 @@ async def parse_reactions(app: TelegramClient, peer_channel: PeerChannel):
                         from_user_id=0,
                         to_user_id=to_user_id,
                         emoticon=get_emoticon(reaction_count.reaction),
-                        count=reaction_count.count
+                        count=reaction_count.count,
+                        date=message.date
                     ) for reaction_count in message.reactions.results])
 
     return reactions_data

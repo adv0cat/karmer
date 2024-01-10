@@ -1,6 +1,8 @@
 import os
 import asyncpg
 
+from datetime import datetime, timezone
+
 
 async def init_postgres_db() -> asyncpg.Connection:
     print('init postgres db')
@@ -15,19 +17,22 @@ async def init_postgres_db() -> asyncpg.Connection:
 
 
 class Reaction:
-    def __init__(self, channel_id: int = 0, msg_id: int = 0, from_user_id: int = 0, to_user_id: int = 0,
-                 emoticon: str = '', count: int = 0):
+    def __init__(self, channel_id: int = 0, msg_id: int = 0, from_user_id: int = 0,
+                 to_user_id: int = 0, emoticon: str = '', count: int = 0,
+                 date: datetime = None):
         self.channel_id = channel_id
         self.msg_id = msg_id
         self.from_user_id = from_user_id
         self.to_user_id = to_user_id
         self.emoticon = emoticon
         self.count = count
+        self.date = date if date is not None else datetime.now(timezone.utc)
 
     @classmethod
     def from_record(cls, record: asyncpg.Record):
-        return cls(channel_id=record['channel_id'], msg_id=record['msg_id'], from_user_id=record['from_user_id'],
-                   to_user_id=record['to_user_id'], emoticon=record['emoticon'], count=record['count'])
+        return cls(channel_id=record['channel_id'], msg_id=record['msg_id'],
+                   from_user_id=record['from_user_id'], to_user_id=record['to_user_id'],
+                   emoticon=record['emoticon'], count=record['count'], date=record['date'])
 
     def to_tuple(self):
         return (
@@ -36,13 +41,14 @@ class Reaction:
             self.from_user_id,
             self.to_user_id,
             self.emoticon,
-            self.count
+            self.count,
+            self.date
         )
 
     def __repr__(self):
         return (f'Reaction(channel_id={self.channel_id}, msg_id={self.msg_id}, '
                 f'from_user_id={self.from_user_id}, to_user_id={self.to_user_id}, '
-                f'emoticon="{self.emoticon}", count={self.count})')
+                f'emoticon="{self.emoticon}", count={self.count}, date={self.date})')
 
 
 class ReactionCost:
