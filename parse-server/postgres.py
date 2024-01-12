@@ -45,6 +45,17 @@ class Reaction:
             self.date
         )
 
+    def to_pkey_tuple(self):
+        return (
+            self.channel_id,
+            self.msg_id,
+            self.from_user_id,
+            self.emoticon
+        )
+
+    def is_valid(self):
+        return self.from_user_id is not self.to_user_id
+
     def __repr__(self):
         return (f'Reaction(channel_id={self.channel_id}, msg_id={self.msg_id}, '
                 f'from_user_id={self.from_user_id}, to_user_id={self.to_user_id}, '

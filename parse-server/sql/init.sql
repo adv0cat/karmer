@@ -1,3 +1,11 @@
+CREATE TYPE PKeyReaction AS
+(
+    channel_id   INTEGER,
+    msg_id       INTEGER,
+    from_user_id INTEGER,
+    emoticon     TEXT
+);
+
 CREATE TABLE Reactions
 (
     channel_id   INTEGER,
