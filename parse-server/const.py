@@ -12,4 +12,5 @@ def get_max_offset() -> timedelta:
     if max_offset < timedelta(minutes=1):
         max_offset = timedelta(days=1)
 
+    print("max_offset:", max_offset)
     return max_offset

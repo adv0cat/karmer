@@ -1,15 +1,12 @@
 import asyncpg
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from telethon.tl.types import PeerChannel
 from emoticon import get_emoticon
 from peer import get_peer_id
-from const import get_max_offset
 from sql_query import INSERT_REACTIONS_SQL, DELETE_REACTIONS_SQL
 from postgres import Reaction
 from telethon import TelegramClient
-
-MAX_OFFSET = get_max_offset()
 
 
 async def parse_channels(app: TelegramClient) -> list[PeerChannel]:
@@ -22,9 +19,9 @@ async def parse_channels(app: TelegramClient) -> list[PeerChannel]:
     return channels
 
 
-async def parse_reactions(app: TelegramClient, peer_channel: PeerChannel):
+async def parse_reactions(app: TelegramClient, peer_channel: PeerChannel, max_offset: timedelta) -> list[Reaction]:
     reactions_data = []
-    offset_date = datetime.now(timezone.utc) - MAX_OFFSET
+    offset_date = datetime.now(timezone.utc) - max_offset
     async for message in app.iter_messages(entity=peer_channel):
         if message.date < offset_date:
             return reactions_data
@@ -64,13 +61,13 @@ async def parse_reactions(app: TelegramClient, peer_channel: PeerChannel):
     return reactions_data
 
 
-async def parse_telegram(app: TelegramClient, postgres: asyncpg.Connection):
+async def parse_telegram(app: TelegramClient, postgres: asyncpg.Connection, max_offset: timedelta):
     print('start parse telegram')
     channels = await parse_channels(app)
     print("channels:", [channel.channel_id for channel in channels])
     for channel in channels:
         channel_id = channel.channel_id
-        reactions = await parse_reactions(app, channel)
+        reactions = await parse_reactions(app, channel, max_offset)
         print(f'[{channel_id}] reactions({len(reactions)}):', reactions)
 
         async with postgres.transaction():

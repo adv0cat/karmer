@@ -3,6 +3,7 @@ import asyncpg
 import os
 
 from typing import Coroutine, Any
+from const import get_max_offset
 from parse import parse_telegram
 from telethon import TelegramClient
 
@@ -25,9 +26,10 @@ def get_telegram_client(code_queue: asyncio.Queue) -> Coroutine[Any, Any, Telegr
 
 
 async def run_telegram_loop(app: TelegramClient, postgres: asyncpg.Connection):
+    max_offset = get_max_offset()
     while True:
         print('start telegram loop')
-        await parse_telegram(app, postgres)
+        await parse_telegram(app, postgres, max_offset)
         print(f'{PARSE_TELEGRAM_INTERVAL}s waiting...')
         await asyncio.sleep(PARSE_TELEGRAM_INTERVAL)
 
