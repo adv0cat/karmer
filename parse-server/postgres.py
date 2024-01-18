@@ -2,6 +2,7 @@ import os
 import asyncpg
 
 from datetime import datetime, timezone
+from pydantic import BaseModel, PositiveInt, Field
 
 
 async def init_postgres_db() -> asyncpg.Connection:
@@ -16,23 +17,14 @@ async def init_postgres_db() -> asyncpg.Connection:
     return await asyncpg.connect(user=user, password=password, database=database, host=host, port=port)
 
 
-class Reaction:
-    def __init__(self, channel_id: int = 0, msg_id: int = 0, from_user_id: int = 0,
-                 to_user_id: int = 0, emoticon: str = '', count: int = 0,
-                 date: datetime = None):
-        self.channel_id = channel_id
-        self.msg_id = msg_id
-        self.from_user_id = from_user_id
-        self.to_user_id = to_user_id
-        self.emoticon = emoticon
-        self.count = count
-        self.date = date if date is not None else datetime.now(timezone.utc)
-
-    @classmethod
-    def from_record(cls, record: asyncpg.Record):
-        return cls(channel_id=record['channel_id'], msg_id=record['msg_id'],
-                   from_user_id=record['from_user_id'], to_user_id=record['to_user_id'],
-                   emoticon=record['emoticon'], count=record['count'], date=record['date'])
+class Reaction(BaseModel):
+    channel_id: PositiveInt
+    msg_id: PositiveInt
+    from_user_id: PositiveInt
+    to_user_id: PositiveInt
+    emoticon: str = ''
+    count: PositiveInt
+    date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     def to_tuple(self):
         return (
@@ -56,20 +48,7 @@ class Reaction:
     def is_valid(self):
         return self.from_user_id is not self.to_user_id
 
-    def __repr__(self):
-        return (f'Reaction(channel_id={self.channel_id}, msg_id={self.msg_id}, '
-                f'from_user_id={self.from_user_id}, to_user_id={self.to_user_id}, '
-                f'emoticon="{self.emoticon}", count={self.count}, date={self.date})')
 
-
-class ReactionCost:
-    def __init__(self, emoticon: str = '', cost: int = 0):
-        self.emoticon = emoticon
-        self.cost = cost
-
-    @classmethod
-    def from_record(cls, record: asyncpg.Record):
-        return cls(emoticon=record['emoticon'], cost=record['cost'])
-
-    def __repr__(self):
-        return f'ReactionCost(emoticon="{self.emoticon}", cost={self.cost})'
+class ReactionCost(BaseModel):
+    emoticon: str = ''
+    cost: PositiveInt
