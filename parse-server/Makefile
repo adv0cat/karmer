@@ -18,3 +18,6 @@ run-db-docker:
 		-e POSTGRES_DB=${POSTGRES_DB} \
 		-d postgres:alpine
 	@echo "Postgres started"
+
+run-server:
+	python3 -m uvicorn main:fast_api --host "0.0.0.0" --port 8080

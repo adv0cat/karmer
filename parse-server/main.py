@@ -4,7 +4,7 @@ import asyncpg
 from typing import Optional
 from dotenv import load_dotenv
 from telegram import init_telegram_client
-from postgres import init_postgres_db
+from pg_pool import init_pg_pool
 from fast_api_router import router, code_queue
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -14,21 +14,21 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    postgres_db: Optional[asyncpg.Connection] = None
-    telegram_task: Optional[asyncio.Task] = None
+    pg_pool: Optional[asyncpg.Pool] = None
+    tg_task: Optional[asyncio.Task] = None
     try:
         print('start main', app)
-        postgres_db = await init_postgres_db()
-        telegram_task = asyncio.create_task(init_telegram_client(code_queue, postgres_db))
+        pg_pool = await init_pg_pool()
+        tg_task = asyncio.create_task(init_telegram_client(code_queue, pg_pool))
         yield
     finally:
-        if postgres_db is not None:
-            print('end postgres_db')
-            await postgres_db.close()
-        if telegram_task is not None:
-            print('end telegram_task')
+        if pg_pool is not None:
+            print('end pg_pool')
+            await pg_pool.close()
+        if tg_task is not None:
+            print('end tg_task')
             try:
-                telegram_task.cancel()
+                tg_task.cancel()
             except asyncio.CancelledError:
                 pass
 
