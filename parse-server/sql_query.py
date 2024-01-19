@@ -14,3 +14,24 @@ WHERE channel_id = $1
   AND (channel_id, msg_id, from_user_id, emoticon)
     NOT IN (SELECT * FROM unnest($3::PKeyReaction[]));
     '''
+
+GET_ALL_KARMA_SQL = '''
+SELECT R.to_user_id           AS user_id,
+       SUM(RC.cost * R.count) AS total_karma
+FROM Reactions R
+         JOIN
+     ReactionCost RC ON R.emoticon = RC.emoticon
+WHERE R.channel_id = $1
+GROUP BY R.to_user_id
+HAVING SUM(RC.cost * R.count) <> 0
+ORDER BY total_karma DESC;
+    '''
+
+GET_MY_KARMA_SQL = '''
+SELECT SUM(RC.cost * R.count) AS total_karma
+FROM Reactions R
+         JOIN
+     ReactionCost RC ON R.emoticon = RC.emoticon
+WHERE R.channel_id = $1
+  AND R.to_user_id = $2;
+    '''

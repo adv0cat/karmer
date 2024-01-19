@@ -5,6 +5,9 @@ import asyncpg
 
 from datetime import datetime, timezone
 from pydantic import BaseModel, PositiveInt, Field
+from full_name import get_full_name
+from telethon import TelegramClient
+from telethon.tl.types import User
 
 ReactionTuple = Tuple[int, int, int, int, str, int, datetime]
 ReactionPKey = Tuple[int, int, int, str]
@@ -54,6 +57,11 @@ class Reaction(BaseModel):
         return self.from_user_id is not self.to_user_id
 
 
-class ReactionCost(BaseModel):
-    emoticon: str = ''
-    cost: PositiveInt
+class UserKarma(BaseModel):
+    user_id: PositiveInt
+    full_name: str = ''
+    total_karma: int
+
+    async def parse_tg(self, tg: TelegramClient):
+        user: User = await tg.get_entity(self.user_id)
+        self.full_name = get_full_name(user)
