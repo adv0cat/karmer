@@ -3,6 +3,7 @@ import asyncpg
 
 from typing import AsyncIterator, Tuple
 from datetime import datetime, timezone, timedelta
+from pydantic import ValidationError
 from telethon.tl.types import PeerChannel
 from emoticon import get_emoticon
 from peer import get_peer_id
@@ -36,13 +37,17 @@ async def parse_telegram(tg: TelegramClient, pg_pool: asyncpg.Pool, max_offset: 
 
 async def parse_channel(channel_id: int, pg_pool: asyncpg.Pool, reactions_iter: AsyncIterator[Reactions]) -> None:
     print(f'[{channel_id}] start parse channel')
-    async with pg_pool.acquire() as pg_conn:
-        async for tuples, p_keys, msg_ids in reactions_iter:
-            if len(msg_ids) > 0:
-                async with pg_conn.transaction():
-                    print(f'\t\t[{channel_id}] start transaction ({len(msg_ids)}):', msg_ids)
-                    await pg_conn.execute(DELETE_REACTIONS_SQL, channel_id, msg_ids, p_keys)
-                    await pg_conn.executemany(INSERT_REACTIONS_SQL, tuples)
+    async for tuples, p_keys, msg_ids in reactions_iter:
+        if len(msg_ids) > 0:
+            try:
+                async with pg_pool.acquire() as pg_conn:
+                    async with pg_conn.transaction():
+                        print(f'\t\t[{channel_id}] start transaction ({len(msg_ids)}):', msg_ids)
+                        await pg_conn.execute(DELETE_REACTIONS_SQL, channel_id, msg_ids, p_keys)
+                        await pg_conn.executemany(INSERT_REACTIONS_SQL, tuples)
+                    print(f'\t\t[{channel_id}] end transaction')
+            finally:
+                pass
 
     print(f'[{channel_id}] end parse channel')
 
@@ -94,27 +99,30 @@ def get_reactions(channel_id: int, message: Message) -> list[Reaction]:
     msg_id = message.id
     to_user_id = message.replies.channel_id if message.post else get_peer_id(message.from_id)
 
-    if to_user_id is not None:
-        recent_reactions = message.reactions.recent_reactions
-        if recent_reactions is not None and len(recent_reactions):
-            return [Reaction(
-                channel_id=channel_id,
-                msg_id=msg_id,
-                from_user_id=reaction.peer_id.user_id,
-                to_user_id=to_user_id,
-                emoticon=get_emoticon(reaction.reaction),
-                count=1,
-                date=reaction.date
-            ) for reaction in recent_reactions]
-        elif message.reactions.results is not None:
-            return [Reaction(
-                channel_id=channel_id,
-                msg_id=msg_id,
-                from_user_id=0,
-                to_user_id=to_user_id,
-                emoticon=get_emoticon(reaction_count.reaction),
-                count=reaction_count.count,
-                date=message.date
-            ) for reaction_count in message.reactions.results]
-
-    return []
+    try:
+        if to_user_id is not None:
+            recent_reactions = message.reactions.recent_reactions
+            if recent_reactions is not None and len(recent_reactions):
+                return [Reaction(
+                    channel_id=channel_id,
+                    msg_id=msg_id,
+                    from_user_id=reaction.peer_id.user_id,
+                    to_user_id=to_user_id,
+                    emoticon=get_emoticon(reaction.reaction),
+                    count=1,
+                    date=reaction.date
+                ) for reaction in recent_reactions]
+            elif message.reactions.results is not None:
+                return [Reaction(
+                    channel_id=channel_id,
+                    msg_id=msg_id,
+                    from_user_id=0,
+                    to_user_id=to_user_id,
+                    emoticon=get_emoticon(reaction_count.reaction),
+                    count=reaction_count.count,
+                    date=message.date
+                ) for reaction_count in message.reactions.results]
+    except ValidationError as e:
+        print(e)
+    finally:
+        return []

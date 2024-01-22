@@ -28,7 +28,7 @@ async def init_pg_pool() -> asyncpg.Pool:
 class Reaction(BaseModel):
     channel_id: PositiveInt
     msg_id: PositiveInt
-    from_user_id: PositiveInt
+    from_user_id: int
     to_user_id: PositiveInt
     emoticon: str = ''
     count: PositiveInt

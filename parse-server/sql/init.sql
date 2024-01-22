@@ -2,26 +2,28 @@ CREATE TYPE PKeyReaction AS
 (
     channel_id   INTEGER,
     msg_id       INTEGER,
-    from_user_id INTEGER,
+    from_user_id BIGINT,
     emoticon     TEXT
 );
 
 CREATE TABLE Reactions
 (
-    channel_id   INTEGER,
+    channel_id   BIGINT,
     msg_id       INTEGER,
-    from_user_id INTEGER,
-    to_user_id   INTEGER,
+    from_user_id BIGINT,
+    to_user_id   BIGINT,
     emoticon     TEXT CHECK (CHAR_LENGTH(emoticon) <= 50),
     count        INTEGER DEFAULT 1,
     created_at   TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (channel_id, msg_id, from_user_id, emoticon)
 );
 
+CREATE INDEX idx_reactions_channel_user ON Reactions(channel_id, to_user_id);
+
 CREATE TABLE ReactionCost
 (
     emoticon TEXT CHECK (CHAR_LENGTH(emoticon) <= 50) PRIMARY KEY,
-    cost     INTEGER NOT NULL
+    cost     SMALLINT NOT NULL
 );
 
 INSERT INTO ReactionCost (emoticon, cost)
