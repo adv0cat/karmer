@@ -122,7 +122,7 @@ def get_reactions(channel_id: int, message: Message) -> list[Reaction]:
                     count=reaction_count.count,
                     date=message.date
                 ) for reaction_count in message.reactions.results]
+        return []
     except ValidationError as e:
         print(e)
-    finally:
         return []

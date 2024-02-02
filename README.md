@@ -38,5 +38,9 @@ OFFSET_MINUTES=0
 - [x] Implement this **MVP** into a server
 - [x] Create a **Docker image** from the server
 - [x] Wrap everything in **Docker Compose** for backend and DB integration
-- [ ] Develop a backend that provides **analytics on reactions**
-- [ ] Integrate the analytics backend with **Telegram**
+- [x] Develop a backend that provides **analytics on reactions**
+- [x] Add `!help` **command**
+- [x] Add `!mute` **command**
+- [x] Add `!my_karma` **command**
+- [x] Add `!karma` **command**
+- [x] Integrate the analytics backend with **Telegram**

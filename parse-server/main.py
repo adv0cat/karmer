@@ -34,5 +34,5 @@ async def lifespan(app: FastAPI):
 
     print('end main')
 
-fast_api = FastAPI(responses={404: {"description": "Not found"}}, lifespan=lifespan)
+fast_api = FastAPI(responses={404: {"description": "Not found"}}, lifespan=lifespan, debug=True)
 fast_api.include_router(router)
