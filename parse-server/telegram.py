@@ -22,9 +22,6 @@ from telethon.tl.types import ChannelParticipantCreator, ChannelParticipantAdmin
     ChannelParticipantLeft, ChannelParticipantSelf, ChannelParticipant, channels
 from telethon.tl.functions.channels import GetParticipantRequest
 
-PARSE_TELEGRAM_INTERVAL = 10
-BAN_MINUTES = 5
-
 
 async def init_telegram_client(code_queue: asyncio.Queue, pg_pool: asyncpg.Pool):
     print('init telegram client')
@@ -32,6 +29,8 @@ async def init_telegram_client(code_queue: asyncio.Queue, pg_pool: asyncpg.Pool)
 
     me = await tg.get_me()
     pattern = f'.*@{me.username}'
+
+    mute_minutes = int(os.environ.get("MUTE_MINUTES") or '5')
 
     @tg.on(events.NewMessage(incoming=True, forwards=False, pattern=pattern))
     async def handler(event: events.NewMessage.Event):
@@ -84,7 +83,7 @@ async def init_telegram_client(code_queue: asyncio.Queue, pg_pool: asyncpg.Pool)
                 return
 
             reason = f' по причине "{command_msg}"' if command_msg is not None else ', причина умалчивается'
-            await mute_user(tg, message, timedelta(minutes=BAN_MINUTES), reason)
+            await mute_user(tg, message, timedelta(minutes=mute_minutes), reason)
 
         elif command == TgCommand.HELP:
             await first_delete.send(f'{sender_full_name}, вот мои команды:' + TgCommand.get_list_for())
@@ -131,10 +130,11 @@ def get_telegram_client(code_queue: asyncio.Queue) -> Coroutine[Any, Any, Telegr
 
 
 async def run_infinite_loop():
+    parse_interval_seconds = int(os.environ.get("PARSE_INTERVAL_SECONDS") or '10')
     while True:
         yield
-        print(f'{PARSE_TELEGRAM_INTERVAL}s waiting...')
-        await asyncio.sleep(PARSE_TELEGRAM_INTERVAL)
+        print(f'{parse_interval_seconds}s waiting...')
+        await asyncio.sleep(parse_interval_seconds)
 
 
 def get_phone():

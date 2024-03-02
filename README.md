@@ -28,6 +28,12 @@ OFFSET_WEEKS=0
 OFFSET_DAYS=0
 OFFSET_HOURS=24
 OFFSET_MINUTES=0
+
+# PARSE TELEGRAM INTERVALS (optional)
+PARSE_INTERVAL_SECONDS=10
+
+# MUTE (optional)
+MUTE_MINUTES=5
 " > parse-server/.env
 ```
 
@@ -45,3 +51,4 @@ OFFSET_MINUTES=0
 - [x] Add `!my_karma` **command**
 - [x] Add `!karma` **command**
 - [x] Integrate the analytics backend with **Telegram**
+- [ ] Add democratic **voting** through message reactions
