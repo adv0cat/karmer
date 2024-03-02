@@ -23,13 +23,12 @@ from telethon.tl.types import ChannelParticipantCreator, ChannelParticipantAdmin
 from telethon.tl.functions.channels import GetParticipantRequest
 
 PARSE_TELEGRAM_INTERVAL = 10
-BAN_MINUTES = 2
+BAN_MINUTES = 5
 
 
 async def init_telegram_client(code_queue: asyncio.Queue, pg_pool: asyncpg.Pool):
     print('init telegram client')
     tg = await get_telegram_client(code_queue)
-    first_delete = FirstDelete(tg)
 
     me = await tg.get_me()
     pattern = f'.*@{me.username}'
@@ -56,7 +55,8 @@ async def init_telegram_client(code_queue: asyncio.Queue, pg_pool: asyncpg.Pool)
         chat = await message.get_chat()
         sender = await message.get_sender()
         sender_full_name = get_full_name(sender)
-        # await tg.delete_messages(chat, [message.id])
+
+        first_delete = FirstDelete(tg=tg, chat=chat, msg_id=message.id)
 
         if command == TgCommand.MUTE:
             participant: channels.ChannelParticipant = await tg(GetParticipantRequest(chat, sender))
@@ -66,36 +66,28 @@ async def init_telegram_client(code_queue: asyncio.Queue, pg_pool: asyncpg.Pool)
             is_banned = isinstance(participant.participant, ChannelParticipantBanned)
             is_left = isinstance(participant.participant, ChannelParticipantLeft)
             if is_banned or is_left:
-                await first_delete.send(chat, message.id, f'Что ты такое?!')
-                # await tg.send_message(chat, f'Что ты такое?!')
+                await first_delete.send(f'Что ты такое?!')
                 return
 
             if isinstance(participant.participant, ChannelParticipantSelf):
-                await first_delete.send(chat, message.id, f'Ты зачем себя трогаешь?')
-                # await tg.send_message(chat, f'Ты зачем себя трогаешь?')
+                await first_delete.send(f'Ты зачем себя трогаешь?')
                 return
 
             if isinstance(participant.participant, ChannelParticipant):
-                await first_delete.send(chat, message.id,
-                                        f'У тебя нет здесь власти {sender_full_name}')
-                # await tg.send_message(chat, f'У тебя нет здесь власти {sender_full_name}')
+                await first_delete.send(f'У тебя нет здесь власти {sender_full_name}')
                 return
 
             is_admin = isinstance(participant.participant, ChannelParticipantAdmin)
             is_owner = isinstance(participant.participant, ChannelParticipantCreator)
             if (is_admin or is_owner) and participant.participant.admin_rights.ban_users is not True:
-                await first_delete.send(chat, message.id,
-                                        f'{sender_full_name}, тебе нельзя мьютить юзеров')
-                # await tg.send_message(chat, f'{sender_full_name}, тебе нельзя мьютить юзеров')
+                await first_delete.send(f'{sender_full_name}, тебе нельзя мьютить юзеров')
                 return
 
             reason = f' по причине "{command_msg}"' if command_msg is not None else ', причина умалчивается'
             await mute_user(tg, message, timedelta(minutes=BAN_MINUTES), reason)
 
         elif command == TgCommand.HELP:
-            await first_delete.send(chat, message.id, f'{sender_full_name}, вот мои команды:'
-                                    + TgCommand.get_list_for())
-            # await tg.send_message(chat, f'{sender_full_name}, вот мои команды:' + TgCommand.get_list_for())
+            await first_delete.send(f'{sender_full_name}, вот мои команды:' + TgCommand.get_list_for())
 
         elif command == TgCommand.KARMA:
             async with pg_pool.acquire() as pg_conn:
@@ -104,9 +96,7 @@ async def init_telegram_client(code_queue: asyncio.Queue, pg_pool: asyncpg.Pool)
                 channel_id = get_peer_id(message.peer_id)
                 my_karma = await pg_conn.fetchval(GET_MY_KARMA_SQL, channel_id, user_id)
 
-            await first_delete.send(chat, message.id,
-                                    f'{sender_full_name}, вот твоя карма: `{my_karma}`')
-            # await tg.send_message(chat, f'{sender_full_name}, вот твоя карма: `{my_karma}`')
+            await first_delete.send(f'{sender_full_name}, вот твоя карма: `{my_karma}`')
 
         elif command == TgCommand.ALL_KARMA:
             async with pg_pool.acquire() as pg_conn:
@@ -117,17 +107,13 @@ async def init_telegram_client(code_queue: asyncio.Queue, pg_pool: asyncpg.Pool)
             all_karma = [UserKarma.model_validate(dict(v)) for v in raw_all_karma]
             await asyncio.gather(*[user.parse_tg(tg) for user in all_karma])
 
-            all_karma_str = [f'{i}. {v.full_name} - {v.total_karma}' for i, v in enumerate(all_karma, start=1)]
-            await first_delete.send(chat, message.id, f'{sender_full_name}, вот карма юзеров этого чатика:\n\n'
-                                    + '\n'.join(all_karma_str))
-            # await tg.send_message(chat, f'{sender_full_name}, вот карма юзеров этого чатика:\n\n'
-            #                       + '\n'.join(all_karma_str))
+            all_karma_str_list = [f'{i}. {v.full_name} - {v.total_karma}' for i, v in enumerate(all_karma, start=1)]
+            all_karma_str = '\n'.join(all_karma_str_list)
+            await first_delete.send(f'{sender_full_name}, вот карма юзеров этого чатика:\n\n' + all_karma_str)
 
         else:
-            await first_delete.send(chat, message.id, f'И что теперь делать 🤷‍♂️'
-                                                      f'\nЧто значит "{command}"?\nНет такой команды...')
-            # await tg.send_message(chat, f'И что теперь делать 🤷‍♂️'
-            #                             f'\nЧто значит "{command}"?\nНет такой команды...')
+            await first_delete.send(f'И что теперь делать 🤷‍♂️'
+                                    f'\nЧто значит "{command}"?\nНет такой команды...')
 
     max_offset = get_max_offset()
     async for _ in run_infinite_loop():

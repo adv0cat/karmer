@@ -1,10 +1,12 @@
+from pydantic import BaseModel, PositiveInt
 from telethon import TelegramClient, hints
 
 
-class FirstDelete:
-    def __init__(self, tg: TelegramClient):
-        self.tg = tg
+class FirstDelete(BaseModel):
+    tg: TelegramClient
+    chat: 'hints.EntityLike'
+    msg_id: PositiveInt
 
-    async def send(self, chat: 'hints.EntityLike', message_id: int, message: str):
-        await self.tg.delete_messages(chat, [message_id])
-        await self.tg.send_message(chat, message)
+    async def send(self, message: str):
+        await self.tg.delete_messages(self.chat, [self.msg_id])
+        await self.tg.send_message(self.chat, message)
